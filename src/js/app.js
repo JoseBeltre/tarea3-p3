@@ -1,45 +1,52 @@
 const todoForm = document.querySelector("#todo-form");
 const taskInput = document.querySelector("#task-input");
+const searchInput = document.querySelector("#search-input");
 const todoList = document.querySelector("#todo-list");
 const taskCounter = document.querySelector("#task-counter");
 const emptyState = document.querySelector("#empty-state");
 
-if (!todoForm || !taskInput || !todoList || !taskCounter || !emptyState) {
+if (!todoForm || !taskInput || !searchInput || !todoList || !taskCounter || !emptyState) {
   throw new Error("No se encontraron elementos requeridos de la app TODO.");
 }
 
 const tasks = [];
+let searchTerm = "";
 
 const renderTasks = () => {
   todoList.innerHTML = "";
 
-  tasks.forEach((task, index) => {
+  const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+  const filteredTasks = tasks
+    .map((task, index) => ({ task, index }))
+    .filter((taskItem) => taskItem.task.toLowerCase().includes(normalizedSearchTerm));
+
+  filteredTasks.forEach((taskItem, visibleIndex) => {
     const item = document.createElement("li");
     item.className = "list-group-item d-flex justify-content-between align-items-center gap-3";
 
     const label = document.createElement("span");
     label.className = "flex-grow-1";
-    label.textContent = task;
+    label.textContent = taskItem.task;
 
     const actions = document.createElement("div");
     actions.className = "d-flex align-items-center gap-2";
 
     const number = document.createElement("span");
     number.className = "badge text-bg-light border";
-    number.textContent = `#${index + 1}`;
+    number.textContent = `#${visibleIndex + 1}`;
 
     const editButton = document.createElement("button");
     editButton.type = "button";
     editButton.className = "btn btn-sm btn-outline-primary";
     editButton.dataset.action = "edit";
-    editButton.dataset.index = String(index);
+    editButton.dataset.index = String(taskItem.index);
     editButton.textContent = "Edit";
 
     const deleteButton = document.createElement("button");
     deleteButton.type = "button";
     deleteButton.className = "btn btn-sm btn-outline-danger";
     deleteButton.dataset.action = "delete";
-    deleteButton.dataset.index = String(index);
+    deleteButton.dataset.index = String(taskItem.index);
     deleteButton.textContent = "Delete";
 
     actions.append(number, editButton, deleteButton);
@@ -49,8 +56,23 @@ const renderTasks = () => {
   });
 
   const totalTasks = tasks.length;
-  taskCounter.textContent = `${totalTasks} tasks`;
-  emptyState.classList.toggle("d-none", totalTasks > 0);
+  const visibleTasks = filteredTasks.length;
+  taskCounter.textContent =
+    normalizedSearchTerm === "" ? `${totalTasks} tasks` : `${visibleTasks}/${totalTasks} tasks`;
+
+  if (totalTasks === 0) {
+    emptyState.textContent = "No tasks yet. Add your first one.";
+    emptyState.classList.remove("d-none");
+    return;
+  }
+
+  if (visibleTasks === 0) {
+    emptyState.textContent = "No tasks match your search.";
+    emptyState.classList.remove("d-none");
+    return;
+  }
+
+  emptyState.classList.add("d-none");
 };
 
 todoForm.addEventListener("submit", (event) => {
@@ -59,6 +81,11 @@ todoForm.addEventListener("submit", (event) => {
   tasks.push(taskInput.value.trim());
   taskInput.value = "";
   taskInput.focus();
+  renderTasks();
+});
+
+searchInput.addEventListener("input", () => {
+  searchTerm = searchInput.value;
   renderTasks();
 });
 
