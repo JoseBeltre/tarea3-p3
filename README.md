@@ -3,6 +3,6 @@
 
 TODO con Bootstrap
 
-## Run locally
+## Ejecutar localmente
 
-Open `index.html` in the browser.
+Abre `index.html` en el navegador.
